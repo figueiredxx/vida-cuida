@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<%- include('../partials/head') %>
+</head>
+<body>
+<%- include('../partials/header') %>
+
+<main id="conteudo-principal" class="container">
+    <h1>Conteúdos</h1>
+
+    <div class="progresso-leitura" id="progresso-leitura" data-total="<%= totalPublicados %>">
+        <p class="progresso-leitura__texto" id="progresso-leitura-texto">Carregando seu progresso de leitura&hellip;</p>
+        <div class="progresso-leitura__arco" id="progresso-leitura-barra" role="progressbar"
+             aria-labelledby="progresso-leitura-texto" aria-valuemin="0" aria-valuemax="<%= totalPublicados %>" aria-valuenow="0">
+            <span class="progresso-leitura__preenchimento" id="progresso-leitura-preenchimento" style="width: 0%"></span>
+        </div>
+    </div>
+
+    <form method="GET" action="/conteudos" class="filtros" role="search">
+        <div class="filtros__campo">
+            <label for="categoria">Categoria</label>
+            <select id="categoria" name="categoria">
+                <option value="">Todas as categorias</option>
+                <% categorias.forEach(function(categoria) { %>
+                    <option value="<%= categoria.slug %>" <%= filtrosAtivos.categoria === categoria.slug ? 'selected' : '' %>>
+                        <%= categoria.nome %>
+                    </option>
+                <% }); %>
+            </select>
+        </div>
+
+        <div class="filtros__campo">
+            <label for="faixa">Faixa etária</label>
+            <select id="faixa" name="faixa">
+                <option value="">Todas as faixas</option>
+                <option value="adolescente" <%= filtrosAtivos.faixa === 'adolescente' ? 'selected' : '' %>>Adolescente</option>
+                <option value="adulto" <%= filtrosAtivos.faixa === 'adulto' ? 'selected' : '' %>>Adulto</option>
+                <option value="todas" <%= filtrosAtivos.faixa === 'todas' ? 'selected' : '' %>>Todas as idades</option>
+            </select>
+        </div>
+
+        <div class="filtros__campo">
+            <label for="q">Buscar</label>
+            <input type="search" id="q" name="q" value="<%= filtrosAtivos.q %>" placeholder="Título ou resumo">
+        </div>
+
+        <button type="submit">Filtrar</button>
+    </form>
+
+    <% if (itens.length === 0) { %>
+        <p class="estado-vazio">Nenhum conteúdo encontrado.</p>
+    <% } else { %>
+        <ul class="cards">
+            <% itens.forEach(function(item) { %>
+                <li data-slug="<%= item.slug %>">
+                    <%- include('../partials/badge-faixa', { faixa: item.faixa_etaria }) %>
+                    <span class="badge-lido" hidden>Lido</span>
+                    <a class="cards__titulo" href="/conteudos/<%= item.slug %>"><%= item.titulo %></a>
+                    <p><%= item.resumo %></p>
+                    <p class="cards__meta"><%= item.categoria_nome %></p>
+                </li>
+            <% }); %>
+        </ul>
+
+        <% function comPagina(pagina) {
+            const params = new URLSearchParams();
+            if (filtrosAtivos.categoria) params.set('categoria', filtrosAtivos.categoria);
+            if (filtrosAtivos.faixa) params.set('faixa', filtrosAtivos.faixa);
+            if (filtrosAtivos.q) params.set('q', filtrosAtivos.q);
+            params.set('pagina', pagina);
+            return '/conteudos?' + params.toString();
+        } %>
+
+        <nav class="paginacao" aria-label="Paginação de conteúdos">
+            <% if (paginaAtual > 1) { %>
+                <a href="<%= comPagina(paginaAtual - 1) %>">&larr; Anterior</a>
+            <% } %>
+            <span>Página <%= paginaAtual %> de <%= totalPaginas %></span>
+            <% if (paginaAtual < totalPaginas) { %>
+                <a href="<%= comPagina(paginaAtual + 1) %>">Próxima &rarr;</a>
+            <% } %>
+        </nav>
+    <% } %>
+</main>
+
+<%- include('../partials/footer') %>
+<script src="/js/acessibilidade.js"></script>
+<script src="/js/progresso-leitura.js"></script>
+</body>
+</html>
